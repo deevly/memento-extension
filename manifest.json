@@ -1,0 +1,23 @@
+{
+    "name": "memento",
+    "version": "1.0",
+    "description": "It chase the search history of developers. It will help search easily again.",
+    "permissions": ["history", "storage", "tabs", "identity", "identity.email"],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "action": {
+        "default_popup": "collector.html",
+        "default_icons": {
+            "16": "images/back.png",
+            "48": "images/back.png",
+            "128": "images/back.png"
+        }
+    },
+    "icons": {
+        "16": "images/back.png",
+        "48": "images/back.png",
+        "128": "images/back.png"
+    },
+    "manifest_version": 3
+}
