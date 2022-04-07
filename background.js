@@ -1,4 +1,4 @@
-var turnoff = false;
+var turnoff = true;
 var user = "";
 var tabAndTitles = [];
 const googlePostFix = " - Google 검색";
@@ -93,13 +93,15 @@ function login() {
     chrome.identity.getProfileUserInfo(function (userInfo) {
         user = userInfo.email;
         var url = "http://localhost:8080/save-user?name=" + user;
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", url, true);
-        xhr.setRequestHeader(
-            "Content-Type",
-            "application/x-www-form-urlencoded"
-        );
-        xhr.send("");
+
+        //TODO: fetch로 전부 대체됨
+
+        // xhr.open("POST", url, true);
+        // xhr.setRequestHeader(
+        //     "Content-Type",
+        //     "application/x-www-form-urlencoded"
+        // );
+        // xhr.send("");
     });
 }
 
@@ -109,10 +111,10 @@ function sendPost(data) {
         destUrl = "http://localhost:8080/collect?name=" + user;
         console.log(destUrl);
         console.log(JSON.stringify(data));
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", destUrl, true);
-        xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.send(JSON.stringify(data));
+        // var xhr = new XMLHttpRequest();
+        // xhr.open("POST", destUrl, true);
+        // xhr.setRequestHeader("Content-Type", "application/json");
+        // xhr.send(JSON.stringify(data));
     });
 }
 
@@ -121,10 +123,10 @@ function sendClosed() {
     destUrl = "http://localhost:8080/close-window?name=" + user;
     console.log("창 닫힘, Redis 저장 요청");
     console.log(destUrl);
-    var xhr = new XMLHttpRequest();
-    xhr.open("POST", destUrl, true);
-    xhr.setRequestHeader("Content-Type", "application/json");
-    xhr.send("");
+    // var xhr = new XMLHttpRequest();
+    // xhr.open("POST", destUrl, true);
+    // xhr.setRequestHeader("Content-Type", "application/json");
+    // xhr.send("");
 }
 
 function sendStopWorker() {
@@ -133,10 +135,10 @@ function sendStopWorker() {
         destUrl = "http://localhost:8080/stop-worker?name=" + user;
         console.log("워커 종료, Redis 저장 요청");
         console.log(destUrl);
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", destUrl, true);
-        xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.send();
+        // var xhr = new XMLHttpRequest();
+        // xhr.open("POST", destUrl, true);
+        // xhr.setRequestHeader("Content-Type", "application/json");
+        // xhr.send();
     });
 }
 
