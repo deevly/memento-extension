@@ -13,23 +13,17 @@ chrome.tabs.onActivated.addListener(function () {
     }
 
     chrome.tabs.query({ active: true }, function (tab) {
-        const tabId = `${tab[0].id}`;
-        var globalKeyword;
-        chrome.storage.local.get([tabId], function (result) {
-            if (isEmpty(result[tab[0].id])) {
+        const tabId = tab[0].id;
+        chrome.storage.local.get([`${tab[0].id}`], function (result) {
+            console.log("탭 전환 후 캐시 없음");
+            if (isEmpty(result[tabId])) {
                 return;
             } else {
                 console.log("탭 전환 후 캐시 있음");
-                globalKeyword = result[tab[0].id];
-                chrome.storage.local.set(
-                    { global: globalKeyword },
-                    function () {
-                        console.log(
-                            "탭 전환 후 캐시 있으니까 저장",
-                            globalKeyword
-                        );
-                    }
-                );
+                const globalKeyword = { global: result[tabId] };
+                chrome.storage.local.set(globalKeyword, function () {
+                    console.log("글로벌 캐시에 현재 탭의 키워드 저장", globalKeyword);
+                });
             }
         });
     });
@@ -48,43 +42,49 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
         }
     }
 
+    function keywordSearchAction() {
+        console.log("업데이트 - 검색 시나리오", tabId);
+        const tabKeyword = {};
+        tabKeyword[tabId] = getKeyword(tab.title);
+        updateAndSendEvent(tabKeyword);
+    }
+
     function pageUpdateAction() {
-        console.log(tabId);
+        console.log("업데이트 - 검색X 시나리오", tabId);
         chrome.storage.local.get([`${tabId}`], function (result) {
             if (isEmpty(result[tabId])) {
-                console.log(
-                    "캐시 없음 시퀸스 ",
-                    globalKeyword,
-                    "???",
-                    result[tabId]
-                );
-                chrome.storage.local.get([global], function (result) {
-                    chrome.storage.local.set(tabKeyword, function () {});
+                console.log("탭 캐시가 없음", result[tabId]);
+                chrome.storage.local.get([`global`], function (result) {
+                    console.log("글로벌 캐시 조회", result);
+                    if (isEmpty(result.global)) {
+                        console.log("글로벌 캐시가 없는 경우 아무 동작 못함");
+                    } else {
+                        console.log("글로벌 캐시가 있는 경우 ", result.global);
+                        const tabKeyword = {};
+                        tabKeyword[tabId] = result.global;
+                        updateAndSendEvent(tabKeyword);
+                    }
                 });
             } else {
-                console.log(
-                    "캐시 있음 시퀸스 ",
-                    globalKeyword,
-                    "???",
-                    result[tabId]
-                );
+                console.log("탭 캐시가 있음. 이벤트 전송", result[tabId]);
+                sendEvent(result[tabId]);
             }
         });
     }
 
-    function keywordSearchAction() {
-        const tabKeyword = {};
-        tabKeyword[tabId] = getKeyword(tab.title);
-        console.log(tabKeyword);
+    function updateAndSendEvent(tabKeyword) {
         chrome.storage.local.set(tabKeyword, function () {
-            globalKeyword = getKeyword(tab.title);
-            console.log("검색어 시퀸스 ", globalKeyword);
-            sendPost({
-                user: user,
-                keyword: globalKeyword,
-                url: tab.url,
-                visitedTime: new Date(),
-            });
+            console.log("캐시 업데이트", tabKeyword);
+            sendEvent(Object.values(tabKeyword)[0]);
+        });
+    }
+
+    function sendEvent(keyword) {
+        fetchData({
+            user: user,
+            keyword: keyword,
+            url: tab.url,
+            visitedTime: new Date(),
         });
     }
 
@@ -93,7 +93,6 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
     }
 
     function verifySearchStatus(title) {
-        console.log("구글 검색 시나리요 ", title);
         const googlePostFix = " - Google 검색";
         return title.indexOf(googlePostFix) > -1;
     }
@@ -119,7 +118,6 @@ chrome.runtime.onConnect.addListener((port) => {
                 user = userInfo.email;
             });
             turnoff = false;
-            globalKeyword = "";
         }
 
         function turnOff() {
@@ -139,7 +137,7 @@ chrome.runtime.onConnect.addListener((port) => {
     });
 });
 
-function sendPost(data) {
+function fetchData(data) {
     chrome.identity.getProfileUserInfo(function () {
         console.log(JSON.stringify(data));
         fetch("http://localhost:9180/event", {
